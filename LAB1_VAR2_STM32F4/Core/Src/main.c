@@ -1,27 +1,27 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2022 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2022 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,6 +43,8 @@ TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 
 UART_HandleTypeDef huart3;
+DMA_HandleTypeDef hdma_usart3_tx;
+DMA_HandleTypeDef hdma_usart3_rx;
 
 /* USER CODE BEGIN PV */
 uint8_t count = 0;
@@ -53,11 +55,19 @@ uint8_t PULSE2 = 80;
 uint8_t brightness = 30;
 uint8_t brightness_off = 0;
 
+volatile uint8_t counter = 0;		//�?чётчик в колбеке У�?РТ
+volatile uint8_t buff[16] = {0,};   //буфер дл�? храннеи�? полученой информации �?  value
+volatile uint8_t value = 0;			//переменна�? в которую запи�?ывай байт информации
+volatile uint8_t flag = 0;     //флаг дл�? от�?леживани�? ввода команд в терминале
+
+
+int str[255]= {0,};					//масив куда записывается угол поворота
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_USART3_UART_Init(void);
@@ -98,81 +108,78 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
 
+	setvbuf(stdin, NULL, _IONBF, 0); // определение нулевого буфера
+
+	HAL_UART_Receive_IT(&huart3, &value, 1);//запускаем UART по прерыванию
+
+
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+
+	printf("PRINT BRIGHTNESS FOR LED In range from 0 to 100->>>>!\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
+	while (1)
+	{
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  btn_cur = HAL_GPIO_ReadPin(BUTTON_EXTI_GPIO_Port, BUTTON_EXTI_Pin);
-//	  switch(count)
-//	  {
-//	  	  case 0:
-//	  	  {
-//	  		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
-//	  		  HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
-//	  	  }
-//	  	  break;
-//	  	  case 1:
-//	  	  {
-//	  		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
-//	  		  HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
-//	  	  }
-//	  	  break;
-//	  	  case 2:
-//	  	  {
-//	  		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
-//	  		  HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
-//	  	  }
-//	  	  break;
-//	  	  case 3:
-//	  	  {
-//	  		  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
-//	  		  HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
-//	  	  }
-//	  	  break;
-//	  }
-	  switch(count)
-	  {
-	  	  case 0:
-	  	  {
-	  		  TIM2->CCR1 = brightness_off;
-	  		  TIM2->CCR2 = brightness_off;
-	  	  }
-	  	  break;
-	  	  case 1:
-	  	  {
-	  		  TIM2->CCR1 = brightness;
-	  		  TIM2->CCR2 = brightness_off;
+		if(flag == 1)
+		{
+			sscanf(&buff[0],"%d",&str[0]);
+			if((str[0]>100)||(str[0]<0))
+			{
+				printf("Error. Please enter correct value!\r\n");
+			}
+			else
+			{
+				brightness = str[0];
+				printf("You enter %d value\r\n",brightness);
+				printf("PRINT BRIGHTNESS FOR LED In range from 0 to 100->>>>!\r\n");
+			}
+			flag = 0;
+		}
 
-	  	  }
-	  	  break;
-	  	  case 2:
-	  	  {
-	  		  TIM2->CCR1 = brightness_off;
-	  		  TIM2->CCR2 = brightness;
-	  	  }
-	  	  break;
-	  	  case 3:
-	  	  {
-	  		  TIM2->CCR1 = brightness;
-	  		  TIM2->CCR2 = brightness;
-	  	  }
-	  	  break;
-	  }
-	  HAL_Delay(5);
-	  btn_prev = btn_cur;
-  }
+		btn_cur = HAL_GPIO_ReadPin(BUTTON_EXTI_GPIO_Port, BUTTON_EXTI_Pin);
+		switch(count)
+		{
+		case 0:
+		{
+			TIM2->CCR1 = brightness_off;
+			TIM2->CCR2 = brightness_off;
+		}
+		break;
+		case 1:
+		{
+			TIM2->CCR1 = brightness;
+			TIM2->CCR2 = brightness_off;
+
+		}
+		break;
+		case 2:
+		{
+			TIM2->CCR1 = brightness_off;
+			TIM2->CCR2 = brightness;
+		}
+		break;
+		case 3:
+		{
+			TIM2->CCR1 = brightness;
+			TIM2->CCR2 = brightness;
+		}
+		break;
+		}
+		HAL_Delay(5);
+		btn_prev = btn_cur;
+	}
   /* USER CODE END 3 */
 }
 
@@ -372,6 +379,25 @@ static void MX_USART3_UART_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Stream1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
+  /* DMA1_Stream3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream3_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -406,6 +432,41 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+int __io_putchar(int ch)
+{
+	HAL_UART_Transmit(&huart3, (uint8_t *) &ch, 1, HAL_MAX_DELAY);
+	return 0;
+}
+//Receive one char in blocking mode
+int __io_getchar(void)
+{
+	uint8_t result;
+	__HAL_UART_CLEAR_OREFLAG(&huart3);
+	HAL_UART_Receive( &huart3, &result, 1, HAL_MAX_DELAY);
+	if (result == '\r') result = '\n'; // Dirty hack. Replace "return" character with "new line" character
+	return (int)result;
+}
+
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if(huart == &huart3)
+	{
+		HAL_UART_Receive_IT(&huart3, &value, 1);
+		//	sscanf(value,"%d",&buff[counter]);
+		buff[counter] = value;
+
+		if(value == '\r')
+		{
+			counter = 0;
+			flag = 1;
+		}
+		else
+			counter ++;
+	}
+}
+
 /* USER CODE END 4 */
 
 /**
@@ -415,11 +476,11 @@ static void MX_GPIO_Init(void)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
-  {
-  }
+	/* User can add his own implementation to report the HAL error return state */
+	__disable_irq();
+	while (1)
+	{
+	}
   /* USER CODE END Error_Handler_Debug */
 }
 
@@ -434,7 +495,7 @@ void Error_Handler(void)
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
+	/* User can add his own implementation to report the file name and line number,
      ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   /* USER CODE END 6 */
 }

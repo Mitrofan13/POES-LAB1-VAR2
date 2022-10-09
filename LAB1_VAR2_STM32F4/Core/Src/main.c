@@ -272,37 +272,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-
-	if(htim->Instance == TIM1)
-	{
-		HAL_TIM_Base_Stop_IT(&htim1); // о�?танавливаем таймер
-		__HAL_GPIO_EXTI_CLEAR_IT(BUTTON_EXTI_Pin);  // очищаем бит EXTI_PR (бит прерывани�?)
-		NVIC_ClearPendingIRQ(EXTI15_10_IRQn); // очищаем бит NVIC_ICPRx (бит очереди)
-		HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);   // включаем внешнее прерывание
-		btn_cur = HAL_GPIO_ReadPin(BUTTON_EXTI_GPIO_Port, BUTTON_EXTI_Pin);
-		if((btn_prev == 0) && (btn_cur != 0))
-		{
-			count++;
-			if(count == 4)
-			{
-				count = 0;
-			}
-		}
-	}
-
-}
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-	if(GPIO_Pin == BUTTON_EXTI_Pin)
-	{
-		HAL_NVIC_DisableIRQ(EXTI15_10_IRQn); // �?разу же отключаем прерывани�? на �?том пине
-		// либо выполн�?ем какое-то дей�?твие пр�?мо тут, либо поднимаем флажок
-		HAL_TIM_Base_Start_IT(&htim1); // запу�?каем таймер
-	}
-}
 /* USER CODE END 4 */
 
 /**

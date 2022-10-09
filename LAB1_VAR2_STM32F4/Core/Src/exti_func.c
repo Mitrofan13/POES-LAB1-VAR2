@@ -8,8 +8,8 @@
 
 #include "main.h"
 extern uint8_t flag;
-extern uint8_t btn_cur ;				//текущее состояние кнопки
-extern uint8_t btn_prev ; 				//предыдущее состояние кнопки
+extern uint8_t btn_cur ;
+extern uint8_t btn_prev ;
 extern uint8_t count;
 
 extern TIM_HandleTypeDef htim1;
@@ -34,7 +34,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			}
 		}
 	}
-
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)

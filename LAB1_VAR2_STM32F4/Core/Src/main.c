@@ -47,21 +47,18 @@ DMA_HandleTypeDef hdma_usart3_tx;
 DMA_HandleTypeDef hdma_usart3_rx;
 
 /* USER CODE BEGIN PV */
-uint8_t count = 0;
-uint8_t btn_cur  = 0;				//текущее �?о�?то�?ние кнопки
-uint8_t btn_prev = 0; 				//предыдущее �?о�?то�?ние кнопки
-uint8_t PULSE1 = 10;
-uint8_t PULSE2 = 80;
-uint8_t brightness = 30;
-uint8_t brightness_off = 0;
+uint8_t count = 0;					//к-ть натискать
+uint8_t btn_cur  = 0;				//поточне значення кнопки
+uint8_t btn_prev = 0; 				//попереднє значення кнопки
+uint8_t active_brightness = 50;		//активна яскравість
+uint8_t off_brightness = 0;			//вимкнена яскравість
 
-volatile uint8_t counter = 0;		//�?чётчик в колбеке У�?РТ
-volatile uint8_t buff[16] = {0,};   //буфер дл�? храннеи�? полученой информации �?  value
-volatile uint8_t value = 0;			//переменна�? в которую запи�?ывай байт информации
-volatile uint8_t flag = 0;     //флаг дл�? от�?леживани�? ввода команд в терминале
+volatile uint8_t counter = 0;		//рахівник на колбеці У�?РТ
+volatile uint8_t buff[16] = {0,};   //буфер для збереження введеної інформації value
+volatile uint8_t value = 0;			//змінна в котру записують байт інформаціїї з терміналу
+volatile uint8_t flag = 0;          //флаг дл відслідковування введення команд в термінал
 
-
-int str[255]= {0,};					//масив куда записывается угол поворота
+int str[255]= {0,};					//масив де зберігаються введені дані з ьерміналу
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -141,8 +138,8 @@ int main(void)
 			}
 			else
 			{
-				brightness = str[0];
-				printf("You enter %d value\r\n",brightness);
+				active_brightness = str[0];
+				printf("You enter %d value\r\n",active_brightness);
 				printf("PRINT BRIGHTNESS FOR LED In range from 0 to 100->>>>!\r\n");
 			}
 			flag = 0;
@@ -153,27 +150,27 @@ int main(void)
 		{
 		case 0:
 		{
-			TIM2->CCR1 = brightness_off;
-			TIM2->CCR2 = brightness_off;
+			TIM2->CCR1 = off_brightness;
+			TIM2->CCR2 = off_brightness;
 		}
 		break;
 		case 1:
 		{
-			TIM2->CCR1 = brightness;
-			TIM2->CCR2 = brightness_off;
+			TIM2->CCR1 = active_brightness;
+			TIM2->CCR2 = off_brightness;
 
 		}
 		break;
 		case 2:
 		{
-			TIM2->CCR1 = brightness_off;
-			TIM2->CCR2 = brightness;
+			TIM2->CCR1 = off_brightness;
+			TIM2->CCR2 = active_brightness;
 		}
 		break;
 		case 3:
 		{
-			TIM2->CCR1 = brightness;
-			TIM2->CCR2 = brightness;
+			TIM2->CCR1 = active_brightness;
+			TIM2->CCR2 = active_brightness;
 		}
 		break;
 		}
@@ -433,39 +430,6 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-int __io_putchar(int ch)
-{
-	HAL_UART_Transmit(&huart3, (uint8_t *) &ch, 1, HAL_MAX_DELAY);
-	return 0;
-}
-//Receive one char in blocking mode
-int __io_getchar(void)
-{
-	uint8_t result;
-	__HAL_UART_CLEAR_OREFLAG(&huart3);
-	HAL_UART_Receive( &huart3, &result, 1, HAL_MAX_DELAY);
-	if (result == '\r') result = '\n'; // Dirty hack. Replace "return" character with "new line" character
-	return (int)result;
-}
-
-
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-	if(huart == &huart3)
-	{
-		HAL_UART_Receive_IT(&huart3, &value, 1);
-		//	sscanf(value,"%d",&buff[counter]);
-		buff[counter] = value;
-
-		if(value == '\r')
-		{
-			counter = 0;
-			flag = 1;
-		}
-		else
-			counter ++;
-	}
-}
 
 /* USER CODE END 4 */
 

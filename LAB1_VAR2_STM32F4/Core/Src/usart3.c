@@ -7,11 +7,18 @@
 
 #include "main.h"
 #include "stdio.h"
+#include "myTypes.h"
 
 extern volatile uint8_t counter;
 extern volatile uint8_t buff[16];
 extern volatile uint8_t value;
 extern volatile uint8_t flag;
+
+
+
+
+ TerminalStates_t	terminal_state = terminal_wait;
+ TerminalFlag_t 	terminal_flag  = { 0, 0 };
 
 extern int str[255];
 
@@ -46,7 +53,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		if (value == '\r')
 		{
 			counter = 0;
-			flag = 1;
+			terminal_flag.RX_data = 1;
 		}
 		else
 			counter++;

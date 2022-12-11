@@ -1,6 +1,5 @@
 "./Core/Src/Ptimer.o"
 "./Core/Src/dma.o"
-"./Core/Src/exti_func.o"
 "./Core/Src/gpio.o"
 "./Core/Src/main.o"
 "./Core/Src/mycallbacks.o"

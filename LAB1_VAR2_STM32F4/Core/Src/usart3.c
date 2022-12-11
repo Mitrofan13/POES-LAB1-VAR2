@@ -12,13 +12,8 @@
 extern volatile uint8_t counter;
 extern volatile uint8_t buff[16];
 extern volatile uint8_t value;
-extern volatile uint8_t flag;
 
-
-
-
- TerminalStates_t	terminal_state = terminal_wait;
- TerminalFlag_t 	terminal_flag  = { 0, 0 };
+TerminalFlag_t 	terminal_flag  = { 0, 0 };
 
 extern int str[255];
 

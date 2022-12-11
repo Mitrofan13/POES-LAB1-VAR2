@@ -54,7 +54,7 @@
 
 
 
-uint8_t count = 1;					//к-ть нати�?кать
+uint8_t count = 0;					//к-ть нати�?кать
 
 uint8_t active_brightness = 50;		//активна �?�?краві�?ть
 uint8_t off_brightness = 0;			//вимкнена �?�?краві�?ть
@@ -95,7 +95,7 @@ int main(void)
 	buttonPinState_t 			button_pin     			= { GPIO_PIN_RESET, GPIO_PIN_RESET };
 	buttonFlags_t 				button_flag 			= { 0, 0 };
 	buttonAntibounceFlags_t 	button_antibounce_flag  = { 0, 0 };
-	extern TerminalFlag_t 				terminal_flag;
+	extern TerminalFlag_t 		terminal_flag;
 	/* USER CODE END 1 */
 
 	/* MCU Configuration--------------------------------------------------------*/

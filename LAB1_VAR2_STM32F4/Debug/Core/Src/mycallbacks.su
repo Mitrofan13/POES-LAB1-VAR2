@@ -1,0 +1,2 @@
+../Core/Src/mycallbacks.c:15:13:HAL_SYSTICK_Callback	8	static
+../Core/Src/mycallbacks.c:20:13:HAL_GPIO_EXTI_Callback	16	static
